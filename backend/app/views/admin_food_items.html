@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ t("food_items") }} – Ekte Mat{% endblock %}
+{% block content %}
+<h1>{{ t("food_items") }}</h1>
+<p class="hint">{{ t("food_items_intro") }}</p>
+<p><a class="button" href="{{ url_for('food_items.new') }}">{{ t("food_new") }}</a></p>
+
+{% if items %}
+<div class="table-scroll">
+<table class="cart-table orders-table">
+  <thead>
+    <tr>
+      <th scope="col">{{ t("food_name") }}</th>
+      <th scope="col">{{ t("event_types") }}</th>
+      <th scope="col" class="num">{{ t("price") }}</th>
+      <th scope="col" class="num">{{ t("food_min_qty") }}</th>
+      <th scope="col">{{ t("images") }}</th>
+      <th scope="col">{{ t("food_status") }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td><a href="{{ url_for('food_items.edit', food_id=item.id) }}">{{ tr(item, "name") }}</a></td>
+      <td>{% for e in item.event_types %}{{ tr(e, "name") }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+      <td class="num">{{ item.price_nok }} kr</td>
+      <td class="num">{{ item.min_order_qty }}</td>
+      <td>
+        {{ t("images_count", approved=item.approved_images) }}
+        {% if item.pending_images %}<span class="status status-submitted">{{ t("images_pending", n=item.pending_images) }}</span>{% endif %}
+      </td>
+      <td>
+        <form method="post" action="{{ url_for('food_items.set_published', food_id=item.id) }}" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% if item.published %}
+          <span class="status status-approved">{{ t("food_is_published") }}</span>
+          <input type="hidden" name="published" value="0">
+          <button type="submit" class="secondary">{{ t("food_unpublish") }}</button>
+          {% else %}
+          <span class="status">{{ t("food_is_hidden") }}</span>
+          <input type="hidden" name="published" value="1">
+          <button type="submit" class="secondary">{{ t("food_publish") }}</button>
+          {% endif %}
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="empty">{{ t("food_none") }}</p>
+{% endif %}
+{% endblock %}

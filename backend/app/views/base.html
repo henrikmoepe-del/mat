@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="{{ g.html_lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ t("site_title") }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('menu.index') }}">Ekte Mat</a>
+    <nav class="header-nav">
+      {% if current_user.is_authenticated and current_user.is_staff %}
+        {% if current_user.role == "admin" %}
+        <a href="{{ url_for('admin.order_list') }}">{{ t("admin_orders") }}</a>
+        <a href="{{ url_for('food_items.item_list') }}">{{ t("food_items") }}</a>
+        <a href="{{ url_for('admin.question_list') }}">{{ t("questions") }}</a>
+        <a href="{{ url_for('admin.event_type_list') }}">{{ t("event_types") }}</a>
+        <a href="{{ url_for('admin.device_list') }}">{{ t("devices") }}</a>
+        {% endif %}
+        {% if current_user.role in ("admin", "kitchen") %}<a href="{{ url_for('kitchen.index') }}">{{ t("kitchen") }}</a>{% endif %}
+        {% if current_user.role == "kitchen" %}<a href="{{ url_for('kitchen.prep') }}">{{ t("prep_list") }}</a>{% endif %}
+        {% if current_user.role in ("admin", "driver") %}<a href="{{ url_for('driver.index') }}">{{ t("driver") }}</a>{% endif %}
+      {% else %}
+      <a href="{{ url_for('menu.index') }}">{{ t("menu_heading") }}</a>
+      <a href="{{ url_for('cart.view') }}" class="cart-link">{{ t("cart") }}{% if cart_count %} <span class="badge">{{ cart_count }}</span>{% endif %}</a>
+      {% endif %}
+    </nav>
+    <div class="account-nav">
+      {% if current_user.is_authenticated %}
+        {% if not current_user.is_staff %}<a href="{{ url_for('orders.history') }}">{{ t("my_orders") }}</a>{% endif %}
+        <span class="who">{{ current_user.name }}</span>
+        <form method="post" action="{{ url_for('account.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="header-button">{{ t("log_out") }}</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('account.login') }}">{{ t("log_in") }}</a>
+        <a href="{{ url_for('account.register') }}">{{ t("register") }}</a>
+      {% endif %}
+    </div>
+    {% set other = "en" if current_language() == "no" else "no" %}
+    <form class="lang-switch" method="post" action="{{ url_for('menu.set_language', lang=other) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="{{ request.full_path if request.query_string else request.path }}">
+      <button type="submit" aria-label="{{ t('language') }}: {{ t('other_language') }}"
+              lang="{{ 'en' if other == 'en' else 'nb' }}">{{ t("other_language") }}</button>
+    </form>
+  </header>
+  <main class="page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <p class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% set heading = t("food_edit") if food_id else t("food_new") %}
+{% block title %}{{ heading }} – Ekte Mat{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('food_items.item_list') }}">← {{ t("food_items") }}</a></p>
+<h1>{{ heading }}</h1>
+
+{% if errors %}
+<div class="flash flash-error" role="alert">
+  <ul>{% for key, args in errors %}<li>{{ t(key, **args) }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('food_items.edit', food_id=food_id) if food_id else url_for('food_items.new') }}"
+      class="checkout-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <fieldset class="panel stack">
+    <legend>{{ t("food_text") }}</legend>
+    <label for="name_no">{{ t("food_name") }} ({{ t("in_norwegian") }})</label>
+    <input id="name_no" name="name_no" required maxlength="{{ limits.MAX_NAME_LENGTH }}" value="{{ values.get('name_no', '') }}" lang="nb">
+    <label for="name_en">{{ t("food_name") }} ({{ t("in_english") }})</label>
+    <input id="name_en" name="name_en" required maxlength="{{ limits.MAX_NAME_LENGTH }}" value="{{ values.get('name_en', '') }}" lang="en">
+    <label for="description_no">{{ t("food_description") }} ({{ t("in_norwegian") }})</label>
+    <textarea id="description_no" name="description_no" rows="2" maxlength="{{ limits.MAX_DESCRIPTION_LENGTH }}"
+              lang="nb">{{ values.get('description_no', '') }}</textarea>
+    <label for="description_en">{{ t("food_description") }} ({{ t("in_english") }})</label>
+    <textarea id="description_en" name="description_en" rows="2" maxlength="{{ limits.MAX_DESCRIPTION_LENGTH }}"
+              lang="en">{{ values.get('description_en', '') }}</textarea>
+  </fieldset>
+
+  <fieldset class="panel stack">
+    <legend>{{ t("food_price_and_minimum") }}</legend>
+    <label for="price_nok">{{ t("food_price") }}</label>
+    <input id="price_nok" name="price_nok" type="number" inputmode="numeric" min="0" max="{{ limits.MAX_PRICE_NOK }}"
+           required value="{{ values.get('price_nok', '') }}">
+    <label for="min_order_qty">{{ t("food_min_qty") }}</label>
+    <input id="min_order_qty" name="min_order_qty" type="number" inputmode="numeric" min="1"
+           max="{{ limits.MAX_MIN_ORDER_QTY }}" required value="{{ values.get('min_order_qty', '') }}"
+           aria-describedby="min-qty-hint">
+    <p class="hint" id="min-qty-hint">{{ t("food_min_qty_hint") }}</p>
+    {% if food_id %}<p class="hint">{{ t("food_price_hint") }}</p>{% endif %}
+  </fieldset>
+
+  <fieldset class="panel">
+    <legend>{{ t("event_types") }}</legend>
+    <p class="hint">{{ t("food_event_types_hint") }}</p>
+    {% for e in choices.event_types %}
+    <label class="choice"><input type="checkbox" name="event_types" value="{{ e.id }}"
+      {% if e.id in values.getlist('event_types') %}checked{% endif %}> {{ tr(e, "name") }}</label>
+    {% endfor %}
+  </fieldset>
+
+  <fieldset class="panel">
+    <legend>{{ t("allergens") }}</legend>
+    {% for a in choices.allergens %}
+    <label class="choice"><input type="checkbox" name="allergens" value="{{ a.code }}"
+      {% if a.code in values.getlist('allergens') %}checked{% endif %}> {{ tr(a, "name") }}</label>
+    {% endfor %}
+  </fieldset>
+
+  <fieldset class="panel">
+    <legend>{{ t("diets") }}</legend>
+    {% for d in choices.diets %}
+    <label class="choice"><input type="checkbox" name="diets" value="{{ d.code }}"
+      {% if d.code in values.getlist('diets') %}checked{% endif %}> {{ tr(d, "name") }}</label>
+    {% endfor %}
+  </fieldset>
+
+  <fieldset class="panel">
+    <legend>{{ t("food_status") }}</legend>
+    <label class="choice"><input type="checkbox" name="published" value="1"
+      {% if values.get('published') == '1' %}checked{% endif %}> {{ t("food_published_label") }}</label>
+  </fieldset>
+
+  <button type="submit">{{ t("save") }}</button>
+</form>
+
+{% if food_id %}
+<section class="panel" id="images">
+  <h2>{{ t("images") }}</h2>
+  <p class="hint">{{ t("images_intro") }}</p>
+
+  {% if images %}
+  <div class="cards">
+    {% for image in images %}
+    <article class="card">
+      <img class="card-img" src="{{ image.path }}" alt="{{ t('image_of', name=tr(values, 'name')) }}">
+      <div class="card-body">
+        <p><span class="status status-{{ {'pending': 'submitted', 'approved': 'approved', 'rejected': 'rejected'}[image.status] }}">{{ t("image_status_" ~ image.status) }}</span>
+          <span class="hint">{{ format_datetime(image.uploaded_at) }}</span></p>
+        {% for status in ("approved", "rejected") if status != image.status %}
+        <form method="post" action="{{ url_for('food_items.review_image', food_id=food_id, image_id=image.id) }}" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="{{ status }}">
+          <button type="submit" class="{{ 'secondary' if status == 'rejected' else '' }}">{{ t("image_action_" ~ status) }}</button>
+        </form>
+        {% endfor %}
+        <form method="post" action="{{ url_for('food_items.delete_image', food_id=food_id, image_id=image.id) }}" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="danger">{{ t("delete") }}</button>
+        </form>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">{{ t("images_none") }}</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('food_items.upload_image', food_id=food_id) }}" enctype="multipart/form-data"
+        class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="image">{{ t("image_upload") }}</label>
+    <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" required
+           aria-describedby="image-hint">
+    <p class="hint" id="image-hint">{{ t("image_upload_hint", mb=limits.MAX_IMAGE_BYTES // (1024 * 1024)) }}</p>
+    <img id="image-preview" class="upload-preview" alt="{{ t('image_preview') }}" hidden>
+    <button type="submit">{{ t("image_upload_button") }}</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>{{ t("food_delete_heading") }}</h2>
+  {% if ordered %}
+  <p class="hint">{{ t("food_on_orders") }}</p>
+  {% else %}
+  <details class="cancel-order">
+    <summary>{{ t("food_delete") }}</summary>
+    <form method="post" action="{{ url_for('food_items.delete', food_id=food_id) }}" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p class="hint">{{ t("food_delete_hint") }}</p>
+      <label class="choice"><input type="checkbox" name="confirm" value="yes" required> {{ t("food_delete_confirm") }}</label>
+      <button type="submit" class="danger">{{ t("food_delete") }}</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+
+<script>
+  // Show the chosen picture before it is uploaded (US-19: the admin previews it first).
+  document.getElementById("image").addEventListener("change", function () {
+    var preview = document.getElementById("image-preview");
+    var file = this.files && this.files[0];
+    if (!file) { preview.hidden = true; return; }
+    preview.src = URL.createObjectURL(file);
+    preview.hidden = false;
+  });
+</script>
+{% endif %}
+{% endblock %}

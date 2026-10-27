@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+# Office lock/temp files
+~$*
+.~lock.*#
+# Editors
+.vscode/
+.idea/
+*.swp
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# Secrets
+.env
+# Uploaded food pictures (local data)
+backend/uploads/

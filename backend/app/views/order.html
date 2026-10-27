@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ t("order_heading", id=order.id) }} – Ekte Mat{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('orders.history') }}">← {{ t("all_orders") }}</a></p>
+<h1>{{ t("order_heading", id=order.id) }}</h1>
+<p class="lead">
+  <span class="status status-{{ order.status }}">{{ t("status_" ~ order.status) }}</span>
+  <span class="pill">{{ t("payment") }}: {{ t("payment_" ~ order.payment_status) }}</span>
+</p>
+{% if read_only %}
+  <p class="flash flash-warning">{{ t("read_only_note") }}</p>
+{% elif can_change %}
+  <section class="panel">
+    <p>{{ t("change_until", date=last_change_date) }}</p>
+    <a class="button" href="{{ url_for('orders.change', order_id=order.id) }}">{{ t("change_order") }}</a>
+    <details class="cancel-order">
+      <summary>{{ t("cancel_order") }}</summary>
+      <form method="post" action="{{ url_for('orders.cancel', order_id=order.id) }}" class="stack">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="choice"><input type="checkbox" name="confirm" value="yes" required> {{ t("cancel_confirm") }}</label>
+        <button type="submit" class="danger">{{ t("cancel_order") }}</button>
+      </form>
+    </details>
+  </section>
+{% else %}
+  <p class="flash flash-warning">{{ t("locked_note", days=lock_days) }}</p>
+{% endif %}
+
+{% include "_order_details.html" %}
+{% include "_questions.html" %}
+{% endblock %}
