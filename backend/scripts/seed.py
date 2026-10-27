@@ -13,10 +13,15 @@ below, so the app can be tried straight away. They are synthetic, for developmen
 `python -m scripts.seed --no-accounts` and create staff with `flask create-staff`. Existing accounts are left as they are.
 """
 import argparse
+import os
 
 from app import auth, create_app
+from app.models import image_store
 from app.models.db import run
-from app.models.repositories import customers, staff
+from app.models.repositories import customers, food_items as food_repo, staff
+
+# One picture per sample dish: seed_images/<food item id>.jpg (free Pexels photos, credits in seed_images/CREDITS.md).
+SEED_IMAGES = os.path.join(os.path.dirname(os.path.dirname(__file__)), "seed_images")
 
 EVENT_TYPES = [
     ("corporate-lunch", "Firmalunsj", "Corporate lunch", 8),
@@ -203,6 +208,21 @@ def seed() -> None:
         )
 
 
+def seed_images() -> int:
+    """Give each sample dish its approved picture, only while it has no picture at all; returns how many were added."""
+    added = 0
+    for item in FOOD_ITEMS:
+        food_id, source = item[0], os.path.join(SEED_IMAGES, f"{item[0]}.jpg")
+        if not os.path.exists(source) or run("MATCH (:FoodItem {id: $id})-[:HAS_IMAGE]->(i:Image) RETURN i.id", id=food_id):
+            continue
+        with open(source, "rb") as f:
+            image_id, path = image_store.save(f.read(), "jpg")
+        food_repo.add_image(food_id, image_id, path)
+        food_repo.review_image(food_id, image_id, "approved")
+        added += 1
+    return added
+
+
 def seed_accounts() -> list[str]:
     """Create the sample staff and customers that don't exist yet; returns the e-mails created."""
     created = []
@@ -222,9 +242,10 @@ def main() -> None:
     args = parser.parse_args()
     with create_app().app_context():
         seed()
+        pictures = seed_images()
         created = [] if args.no_accounts else seed_accounts()
     print(f"Seeded {len(EVENT_TYPES)} event types, {len(ALLERGENS)} allergens, {len(DIETS)} diets, "
-          f"{len(FOOD_ITEMS)} sample food items and {len(INGREDIENTS)} sample ingredients.")
+          f"{len(FOOD_ITEMS)} sample food items ({pictures} new pictures) and {len(INGREDIENTS)} sample ingredients.")
     if created:
         print(f"Created sample accounts (passwords in scripts/seed.py): {', '.join(created)}")
 

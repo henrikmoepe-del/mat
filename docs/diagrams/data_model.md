@@ -180,7 +180,7 @@ classDiagram
 | Property | Values |
 |---|---|
 | `Order.status` | `awaiting_company_approval`, `submitted`, `approved`, `in_preparation`, `delivered`, `rejected`, `cancelled` (see [state diagram](state_order.md)) |
-| `Order.payment_status` | `not_paid`, `invoiced`, `paid` (`deposit_paid` reserved for later; no deposits in this version) |
+| `Order.payment_status` | `not_paid`, `deposit_paid`, `invoiced`, `paid` (`deposit_paid` is set by hand by an admin; no payment solution) |
 | `Order.payment_option` | `invoice`, `vipps`, `bank_transfer` |
 | `Order.event_time` | `HH:MM`, 06:00–23:00 (placeholder opening hours); missing on orders placed before it was added |
 | `MEMBER_OF.role` | `orderer`, `approver` |

@@ -38,6 +38,7 @@
       {% else %}
         <a href="{{ url_for('account.login') }}">{{ t("log_in") }}</a>
         <a href="{{ url_for('account.register') }}">{{ t("register") }}</a>
+        <a href="{{ url_for('account.staff_login') }}">{{ t("staff_login") }}</a>
       {% endif %}
     </div>
     {% set other = "en" if current_language() == "no" else "no" %}

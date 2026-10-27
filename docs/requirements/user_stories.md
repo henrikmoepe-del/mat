@@ -192,7 +192,7 @@ As an **admin**, I want to see how many guests we already have on a given day, s
 ### US-24 Payment status · M
 As an **admin**, I want to set the payment status of an order by hand, so that we know what has been paid.
 *Source: BD payment status; payment state diagram; decision 2026-10-27 (no deposits).*
-- Allowed changes: not paid → invoiced, not paid → paid, invoiced → paid.
+- Allowed changes: not paid → deposit paid, not paid → invoiced, not paid → paid, deposit paid → invoiced, deposit paid → paid, invoiced → paid.
 - The customer's chosen payment option is shown next to the payment status.
 
 ### US-25 Release to kitchen · M

@@ -25,7 +25,7 @@ PAYMENT_OPTIONS = ("invoice", "vipps", "bank_transfer")
 CURRENT_STATUSES = ("awaiting_company_approval", "submitted", "approved", "in_preparation")
 PAST_STATUSES = ("delivered", "cancelled", "rejected")  # final and read-only (state_order.md)
 ALL_STATUSES = CURRENT_STATUSES + PAST_STATUSES
-PAYMENT_STATUSES = ("not_paid", "invoiced", "paid")
+PAYMENT_STATUSES = ("not_paid", "deposit_paid", "invoiced", "paid")
 
 # What the Ekte Mat admin may do, from the allowed-transitions table in docs/diagrams/state_order.md.
 # Company approval and customer changes/cancellations are not admin transitions.
@@ -34,7 +34,8 @@ ADMIN_TRANSITIONS = {
     "approved": ("in_preparation",),  # only when locked, see admin_actions()
     "in_preparation": ("delivered",),
 }
-PAYMENT_TRANSITIONS = {"not_paid": ("invoiced", "paid"), "invoiced": ("paid",)}  # payment state diagram
+PAYMENT_TRANSITIONS = {"not_paid": ("deposit_paid", "invoiced", "paid"), "deposit_paid": ("invoiced", "paid"),
+                       "invoiced": ("paid",)}  # payment state diagram
 
 # Covers per day (Sunniva interview): 400, or 250 when a served wedding dinner is booked that day.
 CAPACITY = 400

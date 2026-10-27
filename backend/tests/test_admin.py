@@ -244,6 +244,15 @@ def test_payment_status(client, store):
     assert 'name="to" value="paid"' not in client.get("/admin/orders/EM-000001").get_data(as_text=True)
 
 
+def test_payment_status_deposit_paid(client, store):
+    client.post("/admin/orders/EM-000001/payment", data={"to": "deposit_paid"})
+    assert store.payment_changes[0]["to_status"] == "deposit_paid"
+    store.order = make_order(payment="deposit_paid")
+    client.post("/admin/orders/EM-000001/payment", data={"to": "paid"})
+    client.post("/admin/orders/EM-000001/payment", data={"to": "not_paid"})
+    assert len(store.payment_changes) == 2
+
+
 def test_status_change_needs_csrf_token(driver):
     app = create_app({"TESTING": True, "NEO4J_DRIVER": driver})
     client = app.test_client()

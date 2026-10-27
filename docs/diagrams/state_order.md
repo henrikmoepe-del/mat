@@ -67,15 +67,19 @@ stateDiagram-v2
     state "Not paid" as NotPaid
 
     [*] --> NotPaid : order submitted / payment option chosen
+    state "Deposit paid" as DepositPaid
+    NotPaid --> DepositPaid : admin registers a deposit
     NotPaid --> Invoiced : admin sends invoice (corporate - monthly)
     NotPaid --> Paid : admin registers full payment (e.g. Vipps)
+    DepositPaid --> Invoiced : admin sends invoice for the rest
+    DepositPaid --> Paid : admin registers the rest
     Invoiced --> Paid : admin registers payment
     Paid --> [*]
 ```
 
-**Deposits are out of scope for this version** (decision 2026-10-27). To add them later, insert a `Deposit paid`
-state between `Not paid` and `Invoiced` / `Paid`; order status and payment status are kept separate, so this won't
-affect the order status diagram. The value `deposit_paid` from `basic_desc.txt` is reserved for that.
+`Deposit paid` is only a label the admin sets by hand (the assignment lists it as an example); there is no payment
+solution and no automatic deposit rule. Order status and payment status are kept separate. The PNG
+(`state_payment.png`) still shows the version without it until it is regenerated.
 
 ## Open questions for the product owner
 

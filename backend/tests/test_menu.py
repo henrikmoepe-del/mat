@@ -24,6 +24,11 @@ def test_menu_shows_event_types_and_cards_in_norwegian(client, driver):
     assert "Ingen retter for denne typen arrangement ennå." in html
 
 
+def test_main_page_links_to_staff_login(client, driver):
+    driver.rows = []
+    assert 'href="/staff/login"' in client.get("/").get_data(as_text=True)
+
+
 def test_card_minimum_is_drawn_from_event_type(client, driver):
     driver.rows = [{"event_type": WEDDING}]
     # Event minimum 50 is larger than the dish's own minimum 10.
